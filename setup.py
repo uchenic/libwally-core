@@ -1,6 +1,22 @@
 """setuptools config for wallycore """
 from setuptools import setup
 
+import os
+import subprocess
+
+from distutils.command.build_clib import build_clib as _build_clib
+
+class build_clib(_build_clib):
+    def run(self):
+        abs_path = os.path.dirname(os.path.abspath(__file__))
+        cln_cmd = [abs_path+'/tools/cleanup.sh']
+        ppr_cmd = [abs_path+'/tools/autogen.sh']
+        cmd = [abs_path+"/configure", "--enable-swig-python"]
+        subprocess.check_call(cln_cmd, cwd=abs_path)
+        subprocess.check_call(ppr_cmd, cwd=abs_path)
+        subprocess.check_call(cmd, cwd=abs_path)
+        subprocess.check_call(["make"], cwd=abs_path)
+
 setup(
     name='wallycore',
 
@@ -12,6 +28,10 @@ setup(
     author_email='jon_p_griffiths@yahoo.com',
     license='MIT',
     zip_safe=False,
+    libraries=[('wallycore',{'sources':['include/wally_core.h']})],
+    cmdclass={
+        'build_clib': build_clib,
+    },
 
     classifiers=[
         'Development Status :: 3 - Alpha',
